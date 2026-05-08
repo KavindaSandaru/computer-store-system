@@ -1,0 +1,67 @@
+services:
+  frontend:
+    build: ./frontend
+
+    container_name: computer-store-frontend
+
+    ports:
+      - "3000:3000"
+
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+    environment:
+      - INTERNAL_API_BASE_URL=${INTERNAL_API_BASE_URL:-http://nginx}
+
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+
+    container_name: computer-store-backend
+
+    ports:
+      - "5000:5000"
+
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+    environment:
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/computer-store}
+      - JWT_SECRET=${JWT_SECRET:-computer-store-dev-secret}
+
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo
+
+    container_name: computer-store-mongodb
+
+    ports:
+      - "27017:27017"
+
+    volumes:
+      - mongodb_data:/data/db
+
+  nginx:
+    image: nginx:latest
+
+    container_name: computer-store-nginx
+
+    ports:
+      - "80:80"
+
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  mongodb_data:
